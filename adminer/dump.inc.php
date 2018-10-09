@@ -14,6 +14,8 @@ if ($_POST && !$error) {
 	$is_sql = preg_match('~sql~', $_POST["format"]);
 
 	if ($is_sql) {
+	    header('Content-Type: application/sql');
+        header('Content-Disposition: attachment; filename="'.DB.'.sql"');
 		echo "-- Adminer $VERSION " . $drivers[DRIVER] . " dump\n\n";
 		if ($jush == "sql") {
 			echo "SET NAMES utf8;
@@ -125,7 +127,7 @@ SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
 page_header(lang('Export'), $error, ($_GET["export"] != "" ? array("table" => $_GET["export"]) : array()), h(DB));
 ?>
 
-<form action="" method="post">
+<form action="" method="post" target="_blank">
 <table cellspacing="0">
 <?php
 $db_style = array('', 'USE', 'DROP+CREATE', 'CREATE');
