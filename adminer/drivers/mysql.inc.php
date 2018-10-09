@@ -30,6 +30,7 @@ if (!defined("DRIVER")) {
 					(!is_numeric($port) ? $port : $socket),
 					($ssl ? 64 : 0) // 64 - MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT (not available before PHP 5.6.16)
 				);
+				$this->options(MYSQLI_OPT_LOCAL_INFILE, false);
 				return $return;
 			}
 
@@ -56,7 +57,7 @@ if (!defined("DRIVER")) {
 			}
 		}
 
-	} elseif (extension_loaded("mysql") && !(ini_get("sql.safe_mode") && extension_loaded("pdo_mysql"))) {
+	} elseif (extension_loaded("mysql") && !((ini_bool("sql.safe_mode") || ini_bool("mysql.allow_local_infile")) && extension_loaded("pdo_mysql"))) {
 		class Min_DB {
 			var
 				$extension = "MySQL", ///< @var string extension name
@@ -74,6 +75,10 @@ if (!defined("DRIVER")) {
 			* @return bool
 			*/
 			function connect($server, $username, $password) {
+				if (ini_bool("mysql.allow_local_infile")) {
+					$this->error = lang('Disable %s or enable %s or %s extensions.', "'mysql.allow_local_infile'", "MySQLi", "PDO_MySQL");
+					return false;
+				}
 				$this->_link = @mysql_connect(
 					($server != "" ? $server : ini_get("mysql.default_host")),
 					("$server$username" != "" ? $username : ini_get("mysql.default_user")),
@@ -230,10 +235,10 @@ if (!defined("DRIVER")) {
 
 			function connect($server, $username, $password) {
 				global $adminer;
-				$options = array();
+				$options = array(PDO::MYSQL_ATTR_LOCAL_INFILE => false);
 				$ssl = $adminer->connectSsl();
 				if ($ssl) {
-					$options = array(
+					$options += array(
 						PDO::MYSQL_ATTR_SSL_KEY => $ssl['key'],
 						PDO::MYSQL_ATTR_SSL_CERT => $ssl['cert'],
 						PDO::MYSQL_ATTR_SSL_CA => $ssl['ca'],
@@ -298,6 +303,16 @@ if (!defined("DRIVER")) {
 			return queries($prefix . implode(",\n", $values) . $suffix);
 		}
 		
+		function slowQuery($query, $timeout) {
+			if (min_version('5.7.8', '10.1.2')) {
+				if (preg_match('~MariaDB~', $this->_conn->server_info)) {
+					return "SET STATEMENT max_statement_time=$timeout FOR $query";
+				} elseif (preg_match('~^(SELECT\b)(.+)~is', $query, $match)) {
+					return "$match[1] /*+ MAX_EXECUTION_TIME(" . ($timeout * 1000) . ") */ $match[2]";
+				}
+			}
+		}
+
 		function convertSearch($idf, $val, $field) {
 			return (preg_match('~char|text|enum|set~', $field["type"]) && !preg_match("~^utf8~", $field["collation"]) && preg_match('~[\x80-\xFF]~', $val['val'])
 				? "CONVERT($idf USING " . charset($this->_conn) . ")"
@@ -376,7 +391,7 @@ if (!defined("DRIVER")) {
 		$return = get_session("dbs");
 		if ($return === null) {
 			$query = (min_version(5)
-				? "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA"
+				? "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA ORDER BY SCHEMA_NAME"
 				: "SHOW DATABASES"
 			); // SHOW DATABASES can be disabled by skip_show_database
 			$return = ($flush ? slow_query($query) : get_vals($query));
@@ -564,7 +579,7 @@ if (!defined("DRIVER")) {
 	*/
 	function foreign_keys($table) {
 		global $connection, $on_actions;
-		static $pattern = '`(?:[^`]|``)+`';
+		static $pattern = '(?:`(?:[^`]|``)+`)|(?:"(?:[^"]|"")+")';
 		$return = array();
 		$create_table = $connection->result("SHOW CREATE TABLE " . table($table), 1);
 		if ($create_table) {
@@ -800,6 +815,12 @@ if (!defined("DRIVER")) {
 				|| !queries("INSERT INTO $name SELECT * FROM " . table($table))
 			) {
 				return false;
+			}
+			foreach (get_rows("SHOW TRIGGERS LIKE " . q(addcslashes($table, "%_\\"))) as $row) {
+				$trigger = $row["Trigger"];
+				if (!queries("CREATE TRIGGER " . ($target == DB ? idf_escape("copy_$trigger") : idf_escape($target) . "." . idf_escape($trigger)) . " $row[Timing] $row[Event] ON $name FOR EACH ROW\n$row[Statement];")) {
+					return false;
+				}
 			}
 		}
 		foreach ($views as $table) {

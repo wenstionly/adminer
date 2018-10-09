@@ -395,13 +395,31 @@ function editingLengthFocus() {
 	var td = this.parentNode;
 	if (/(enum|set)$/.test(selectValue(td.previousSibling.firstChild))) {
 		var edit = qs('#enum-edit');
-		var val = this.value;
-		edit.value = (/^'.+'$/.test(val) ? val.substr(1, val.length - 2).replace(/','/g, "\n").replace(/''/g, "'") : val); //! doesn't handle 'a'',''b' correctly
+		edit.value = enumValues(this.value);
 		td.appendChild(edit);
 		this.style.display = 'none';
 		edit.style.display = 'inline';
 		edit.focus();
 	}
+}
+
+/** Get enum values
+* @param string
+* @return string values separated by newlines
+*/
+function enumValues(s) {
+	var re = /(^|,)\s*'(([^\\']|\\.|'')*)'\s*/g;
+	var result = [];
+	var offset = 0;
+	var match;
+	while (match = re.exec(s)) {
+		if (offset != match.index) {
+			break;
+		}
+		result.push(match[2].replace(/'(')|\\(.)/g, '$1$2'));
+		offset += match[0].length;
+	}
+	return (offset == s.length ? result.join('\n') : s);
 }
 
 /** Finish editing of enum or set
@@ -410,7 +428,7 @@ function editingLengthFocus() {
 function editingLengthBlur() {
 	var field = this.parentNode.firstChild;
 	var val = this.value;
-	field.value = (/^'[^\n]+'$/.test(val) ? val : val && "'" + val.replace(/\n+$/, '').replace(/'/g, "''").replace(/\n/g, "','") + "'");
+	field.value = (/^'[^\n]+'$/.test(val) ? val : val && "'" + val.replace(/\n+$/, '').replace(/'/g, "''").replace(/\\/g, '\\\\').replace(/\n/g, "','") + "'");
 	field.style.display = 'inline';
 	this.style.display = 'none';
 }
@@ -491,8 +509,8 @@ function dumpClick(event) {
 * @this HTMLSelectElement
 */
 function foreignAddRow() {
-	this.onchange = function () { };
 	var row = cloneNode(parentTag(this, 'tr'));
+	this.onchange = function () { };
 	var selects = qsa('select', row);
 	for (var i=0; i < selects.length; i++) {
 		selects[i].name = selects[i].name.replace(/\]/, '1$&');
@@ -507,8 +525,8 @@ function foreignAddRow() {
 * @this HTMLSelectElement
 */
 function indexesAddRow() {
-	this.onchange = function () { };
 	var row = cloneNode(parentTag(this, 'tr'));
+	this.onchange = function () { };
 	var selects = qsa('select', row);
 	for (var i=0; i < selects.length; i++) {
 		selects[i].name = selects[i].name.replace(/indexes\[\d+/, '$&1');
@@ -573,6 +591,23 @@ function indexesAddColumn(prefix) {
 	}
 	parentTag(field, 'td').appendChild(column);
 	field.onchange();
+}
+
+
+
+/** Updates the form action
+* @param HTMLFormElement
+* @param string
+*/
+function sqlSubmit(form, root) {
+	if (encodeURIComponent(form['query'].value).length < 2e3) {
+		form.action = root
+			+ '&sql=' + encodeURIComponent(form['query'].value)
+			+ (form['limit'].value ? '&limit=' + +form['limit'].value : '')
+			+ (form['error_stops'].checked ? '&error_stops=1' : '')
+			+ (form['only_errors'].checked ? '&only_errors=1' : '')
+		;
+	}
 }
 
 

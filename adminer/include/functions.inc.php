@@ -393,19 +393,16 @@ function get_vals($query, $column = 0) {
 /** Get keys from first column and values from second
 * @param string
 * @param Min_DB
-* @param float
 * @param bool
 * @return array
 */
-function get_key_vals($query, $connection2 = null, $timeout = 0, $set_keys = true) {
+function get_key_vals($query, $connection2 = null, $set_keys = true) {
 	global $connection;
 	if (!is_object($connection2)) {
 		$connection2 = $connection;
 	}
 	$return = array();
-	$connection2->timeout = $timeout;
 	$result = $connection2->query($query);
-	$connection2->timeout = 0;
 	if (is_object($result)) {
 		while ($row = $result->fetch_row()) {
 			if ($set_keys) {
@@ -1306,10 +1303,11 @@ function count_rows($table, $where, $is_group, $group) {
 * @return array of strings
 */
 function slow_query($query) {
-	global $adminer, $token;
+	global $adminer, $token, $driver;
 	$db = $adminer->database();
 	$timeout = $adminer->queryTimeout();
-	if (support("kill") && is_object($connection2 = connect()) && ($db == "" || $connection2->select_db($db))) {
+	$slow_query = $driver->slowQuery($query, $timeout);
+	if (!$slow_query && support("kill") && is_object($connection2 = connect()) && ($db == "" || $connection2->select_db($db))) {
 		$kill = $connection2->result(connection_id()); // MySQL and MySQLi can use thread_id but it's not in PDO_MySQL
 		?>
 <script<?php echo nonce(); ?>>
@@ -1324,7 +1322,7 @@ var timeout = setTimeout(function () {
 	}
 	ob_flush();
 	flush();
-	$return = @get_key_vals($query, $connection2, $timeout, false); // @ - may be killed
+	$return = @get_key_vals(($slow_query ? $slow_query : $query), $connection2, false); // @ - may be killed
 	if ($connection2) {
 		echo script("clearTimeout(timeout);");
 		ob_flush();
@@ -1421,7 +1419,7 @@ function edit_form($TABLE, $fields, $row, $update) {
 	if (!$fields) {
 		echo "<p class='error'>" . lang('You have no privileges to update this table.') . "\n";
 	} else {
-		echo "<table cellspacing='0'>" . script("qsl('table').onkeydown = editingKeydown;");
+		echo "<table cellspacing='0' class='layout'>" . script("qsl('table').onkeydown = editingKeydown;");
 
 		foreach ($fields as $name => $field) {
 			echo "<tr><th>" . $adminer->fieldName($field);

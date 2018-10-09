@@ -75,7 +75,7 @@ class Adminer {
 	* @return float number of seconds
 	*/
 	function queryTimeout() {
-		return 5;
+		return 2;
 	}
 
 	/** Headers to send before HTML output
@@ -118,7 +118,7 @@ class Adminer {
 	*/
 	function loginForm() {
 		global $drivers;
-		echo "<table cellspacing='0'>\n";
+		echo "<table cellspacing='0' class='layout'>\n";
 		echo $this->loginFormField('driver', '<tr><th>' . lang('System') . '<td>', html_select("auth[driver]", $drivers, DRIVER) . "\n");
 		echo $this->loginFormField('server', '<tr><th>' . lang('Server') . '<td>', '<input name="auth[server]" value="' . h(SERVER) . '" title="hostname[:port]" placeholder="localhost" autocapitalize="off">' . "\n");
 		echo $this->loginFormField('username', '<tr><th>' . lang('Username') . '<td>', '<input name="auth[username]" id="username" value="' . h($_GET["username"]) . '" autocapitalize="off">' . script("focus(qs('#username'));"));
@@ -145,9 +145,8 @@ class Adminer {
 	* @return mixed true for success, string for error message, false for unknown error
 	*/
 	function login($login, $password) {
-		global $jush;
-		if ($jush == "sqlite") {
-			return lang('<a href="https://www.adminer.org/en/extension/"%s>Implement</a> %s method to use SQLite.', target_blank(), '<code>login()</code>');
+		if ($password == "") {
+			return lang('Adminer does not support accessing a database without a password, <a href="https://www.adminer.org/en/password/"%s>more information</a>.', target_blank());
 		}
 		return true;
 	}
@@ -560,7 +559,7 @@ class Adminer {
 					// find anywhere
 					$cols = array();
 					foreach ($fields as $name => $field) {
-						if ((is_numeric($val["val"]) || !preg_match('~' . number_type() . '|bit~', $field["type"]))
+						if ((preg_match('~^[-\d.' . (preg_match('~IN$~', $val["op"]) ? ',' : '') . ']+$~', $val["val"]) || !preg_match('~' . number_type() . '|bit~', $field["type"]))
 							&& (!preg_match("~[\x80-\xFF]~", $val["val"]) || preg_match('~char|text|enum|set~', $field["type"]))
 						) {
 							$cols[] = $prefix . $driver->convertSearch(idf_escape($name), $val, $field) . $cond;
@@ -844,7 +843,7 @@ class Adminer {
 						foreach ($row as $key => $val) {
 							$field = $fields[$key];
 							$row[$key] = ($val !== null
-								? unconvert_field($field, preg_match(number_type(), $field["type"]) && $val != '' ? $val : q($val))
+								? unconvert_field($field, preg_match(number_type(), $field["type"]) && $val != '' && !preg_match('~\[~', $field["full_type"]) ? $val : q(($val === false ? 0 : $val)))
 								: "NULL"
 							);
 						}
@@ -1020,11 +1019,12 @@ bodyLoad('<?php echo (is_object($connection) ? preg_replace('~^(\d\.?\d).*~s', '
 				}
 			}
 		}
-		echo (isset($_GET["sql"]) ? '<input type="hidden" name="sql" value="">'
-			: (isset($_GET["schema"]) ? '<input type="hidden" name="schema" value="">'
-			: (isset($_GET["dump"]) ? '<input type="hidden" name="dump" value="">'
-			: (isset($_GET["privileges"]) ? '<input type="hidden" name="privileges" value="">'
-		: ""))));
+		foreach (array("import", "sql", "schema", "dump", "privileges") as $val) {
+			if (isset($_GET[$val])) {
+				echo "<input type='hidden' name='$val' value=''>";
+				break;
+			}
+		}
 		echo "</p></form>\n";
 	}
 

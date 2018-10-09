@@ -1,9 +1,36 @@
-Adminer 4.6.3-dev:
+Adminer 4.7.0-dev:
+Simplify storing executed SQL queries to bookmarks
+Warn when using password with leading or trailing spaces
+Hide import from server if no path
+Fix inline editing of empty cells (regression from 4.6.3)
+Allow adding more than two indexes and forign key columns at a time (regression from 4.4.0)
+Fix function change with set data type
+Increase username maxlength to 80 (bug #623)
+Make maxlength in all fields a soft limit
+MySQL: Support foreign keys created with ANSI quotes (bug #620)
+MySQL: Recognize ON UPDATE current_timestamp() (bug #632)
+PostgreSQL: Quote array values in export (bug #621)
+MSSQL: Pass database when connecting
+ClickHouse: Connect, databases list, tables list, select, SQL command
+Georgian translation
+
+Adminer 4.6.3 (released 2018-06-28):
+Disallow using password-less databases
+Copy triggers when copying table
 Stop session before connecting
+Simplify running slow queries
+Decrease timeout for running slow queries from 5 seconds to 2 seconds
 Fix displaying info about non-alphabetical objects (bug #599)
+Use secure cookies on HTTP if session.cookie_secure is set
 PDO: Support binary fields download
+MySQL: Disallow LOAD DATA LOCAL INFILE
 MySQL: Use CONVERT() only when searching for non-ASCII (bug #603)
-PostgreSQL: Do not cast date/time searches to text
+MySQL: Order database names in MySQL 8 (bug #613)
+PostgreSQL: Fix editing data in views (bug #605, regression from 4.6.0)
+PostgreSQL: Do not cast date/time/number/uuid searches to text (bug #608)
+PostgreSQL: Export false as 0 in PDO (bug #619)
+MS SQL: Support port with sqlsrv
+Editor: Do not check boolean checkboxes with false in PostgreSQL (bug #607)
 
 Adminer 4.6.2 (released 2018-02-20):
 Semi-transparent border on table actions
