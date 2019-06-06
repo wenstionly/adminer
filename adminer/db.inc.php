@@ -66,6 +66,7 @@ if ($adminer->homepage()) {
 				}
 			}
 			$doc_link = doc_link(array('sql' => 'show-table-status.html'));
+			echo "<div class='scrollable'>\n";
 			echo "<table cellspacing='0' class='nowrap checkable'>\n";
 			echo script("mixin(qsl('table'), {onclick: tableClick, ondblclick: partialArg(tableClick, true)});");
 			echo '<thead><tr class="wrap">';
@@ -119,6 +120,7 @@ if ($adminer->homepage()) {
 			}
 
 			echo "</table>\n";
+			echo "</div>\n";
 			if (!information_schema(DB)) {
 				echo "<div class='footer'><div>\n";
 				$vacuum = "<input type='submit' value='" . lang('Vacuum') . "'> " . on_help("'VACUUM'");
@@ -138,7 +140,7 @@ if ($adminer->homepage()) {
 					echo "<p>" . lang('Move to other database') . ": ";
 					echo ($databases ? html_select("target", $databases, $db) : '<input name="target" value="' . h($db) . '" autocapitalize="off">');
 					echo " <input type='submit' name='move' value='" . lang('Move') . "'>";
-					echo (support("copy") ? " <input type='submit' name='copy' value='" . lang('Copy') . "'>" : "");
+					echo (support("copy") ? " <input type='submit' name='copy' value='" . lang('Copy') . "'> " . checkbox("overwrite", 1, $_POST["overwrite"], lang('overwrite')) : "");
 					echo "\n";
 				}
 				echo "<input type='hidden' name='all' value=''>"; // used by trCheck()
