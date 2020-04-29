@@ -34,7 +34,7 @@ function bodyLoad(version, maria) {
 			jush.custom_links = jushLinks;
 		}
 		jush.highlight_tag('code', 0);
-		var tags = qsa('textarea', document);
+		var tags = qsa('textarea');
 		for (var i = 0; i < tags.length; i++) {
 			if (/(^|\s)jush-/.test(tags[i].className)) {
 				var pre = jush.textarea(tags[i]);
@@ -75,7 +75,7 @@ function typePassword(el, disable) {
 * @param [HTMLElement]
 */
 function messagesPrint(el) {
-	var els = qsa('.toggle', el || document);
+	var els = qsa('.toggle', el);
 	for (var i = 0; i < els.length; i++) {
 		els[i].onclick = partial(toggle, els[i].getAttribute('href').substr(1));
 	}
@@ -207,6 +207,33 @@ function idfEscape(s) {
 
 
 
+/** Set up event handlers for edit_fields().
+*/
+function editFields() {
+	var els = qsa('[name$="[field]"]');
+	for (var i = 0; i < els.length; i++) {
+		els[i].oninput = function () {
+			editingNameChange.call(this);
+			if (!this.defaultValue) {
+				editingAddRow.call(this);
+			}
+		}
+	}
+	els = qsa('[name$="[length]"]');
+	for (var i = 0; i < els.length; i++) {
+		mixin(els[i], {onfocus: editingLengthFocus, oninput: editingLengthChange});
+	}
+	els = qsa('[name$="[type]"]');
+	for (var i = 0; i < els.length; i++) {
+		mixin(els[i], {
+			onfocus: function () { lastType = selectValue(this); },
+			onchange: editingTypeChange,
+			onmouseover: function (event) { helpMouseover.call(this, event, getTarget(event).value, 1) },
+			onmouseout: helpMouseout
+		});
+	}
+}
+
 /** Handle clicks on fields editing
 * @param MouseEvent
 * @return boolean false to cancel action
@@ -214,7 +241,7 @@ function idfEscape(s) {
 function editingClick(event) {
 	var el = getTarget(event);
 	if (!isTag(el, 'input')) {
-		el = parentTag(target, 'label');
+		el = parentTag(el, 'label');
 		el = el && qs('input', el);
 	}
 	if (el) {
@@ -289,7 +316,7 @@ function editingNameChange() {
 }
 
 /** Add table row for next field
-* @param boolean
+* @param [boolean]
 * @return boolean false
 * @this HTMLInputElement
 */

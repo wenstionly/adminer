@@ -180,6 +180,7 @@ foreach ($engines as $engine) {
 edit_fields($row["fields"], $collations, "TABLE", $foreign_keys);
 ?>
 </table>
+<?php echo script("editFields();"); ?>
 </div>
 <p>
 <?php echo lang('Auto Increment'); ?>: <input type="number" name="Auto_increment" size="6" value="<?php echo h($row["Auto_increment"]); ?>">
@@ -220,4 +221,3 @@ foreach ($row["partition_names"] as $key => $val) {
 ?>
 <input type="hidden" name="token" value="<?php echo $token; ?>">
 </form>
-<?php echo script("qs('#form')['defaults'].onclick();" . (support("comment") ? " editingCommentsClick(qs('#form')['comments']);" : "")); ?>

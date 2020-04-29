@@ -845,7 +845,7 @@ class Adminer {
 						foreach ($row as $key => $val) {
 							$field = $fields[$key];
 							$row[$key] = ($val !== null
-								? unconvert_field($field, preg_match(number_type(), $field["type"]) && $val != '' && !preg_match('~\[~', $field["full_type"]) ? $val : q(($val === false ? 0 : $val)))
+								? unconvert_field($field, preg_match(number_type(), $field["type"]) && !preg_match('~\[~', $field["full_type"]) && is_numeric($val) ? $val : q(($val === false ? 0 : $val)))
 								: "NULL"
 							);
 						}
