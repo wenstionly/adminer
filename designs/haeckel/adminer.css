@@ -494,8 +494,9 @@ fieldset {
 }
 .active{
 	font-weight: normal;
-	color: #283043;
+	/*color: #283043;*/
 	text-shadow: 1px 1px 1px #102030;
+	color: red;
 }
 p {
 	margin: 0.8em 0 0 0;

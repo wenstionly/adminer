@@ -1075,14 +1075,14 @@ if (!defined("DRIVER")) {
 	* @return string
 	*/
 	function convert_field($field) {
-		if (preg_match("~binary~", $field["type"])) {
-			return "HEX(" . idf_escape($field["field"]) . ")";
+		if (preg_match("~binary~", @$field["type"])) {
+			return "HEX(" . idf_escape(@$field["field"]) . ")";
 		}
-		if ($field["type"] == "bit") {
-			return "BIN(" . idf_escape($field["field"]) . " + 0)"; // + 0 is required outside MySQLnd
+		if (@$field["type"] == "bit") {
+			return "BIN(" . idf_escape(@$field["field"]) . " + 0)"; // + 0 is required outside MySQLnd
 		}
-		if (preg_match("~geometry|point|linestring|polygon~", $field["type"])) {
-			return (min_version(8) ? "ST_" : "") . "AsWKT(" . idf_escape($field["field"]) . ")";
+		if (preg_match("~geometry|point|linestring|polygon~", @$field["type"])) {
+			return (min_version(8) ? "ST_" : "") . "AsWKT(" . idf_escape(@$field["field"]) . ")";
 		}
 	}
 
@@ -1092,13 +1092,13 @@ if (!defined("DRIVER")) {
 	* @return string
 	*/
 	function unconvert_field($field, $return) {
-		if (preg_match("~binary~", $field["type"])) {
+		if (preg_match("~binary~", @$field["type"])) {
 			$return = "UNHEX($return)";
 		}
-		if ($field["type"] == "bit") {
+		if (@$field["type"] == "bit") {
 			$return = "CONV($return, 2, 10) + 0";
 		}
-		if (preg_match("~geometry|point|linestring|polygon~", $field["type"])) {
+		if (preg_match("~geometry|point|linestring|polygon~", @$field["type"])) {
 			$prefix = (min_version(8) ? "ST_" : "");
 			$return = $prefix . "GeomFromText($return, $prefix" . "SRID($field[field]))";
 		}
@@ -1160,7 +1160,7 @@ if (!defined("DRIVER")) {
 			'structured_types' => $structured_types,
 			'unsigned' => array("unsigned", "zerofill", "unsigned zerofill"), ///< @var array number variants
 			'operators' => array("=", "<", ">", "<=", ">=", "!=", "LIKE", "LIKE %%", "REGEXP", "IN", "FIND_IN_SET", "IS NULL", "NOT LIKE", "NOT REGEXP", "NOT IN", "IS NOT NULL", "SQL"), ///< @var array operators used in select
-			'functions' => array("char_length", "date", "from_unixtime", "lower", "round", "floor", "ceil", "sec_to_time", "time_to_sec", "upper"), ///< @var array functions used in select
+			'functions' => array('<field>', "char_length", "date", "from_unixtime", "lower", "round", "floor", "ceil", "sec_to_time", "time_to_sec", "upper"), ///< @var array functions used in select
 			'grouping' => array("avg", "count", "count distinct", "group_concat", "max", "min", "sum"), ///< @var array grouping functions used in select
 			'edit_functions' => array( ///< @var array of array("$type|$type2" => "$function/$function2") functions used in editing, [0] - edit and insert, [1] - edit only
 				array(

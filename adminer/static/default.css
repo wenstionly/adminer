@@ -267,6 +267,12 @@ html:lang(en) #version:before {
 	margin: 0;
 	box-sizing: border-box;
 }
+#menu a.active.structure {
+	color:red !important;
+}
+#menu a.active + a.structure {
+	color: red !important;
+}
 #content {
 	min-height: 100%;
 	padding-bottom: 3em;

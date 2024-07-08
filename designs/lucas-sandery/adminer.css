@@ -611,6 +611,7 @@ input[type="file"]:disabled::-moz-file-upload-button {
 .links .active {
 	font-weight: normal;
 	background-color: #414073;
+	color: red;
 }
 #menu .links {
 	display: flex;

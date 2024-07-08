@@ -357,15 +357,15 @@ class Adminer {
 		$i = 0;
 		$select[""] = array();
 		foreach ($select as $key => $val) {
-			$val = $_GET["columns"][$key];
+			$val = @$_GET["columns"][$key];
 			$column = select_input(
 				" name='columns[$i][col]'",
 				$columns,
-				$val["col"],
+				@$val["col"],
 				($key !== "" ? "selectFieldChange" : "selectAddRow")
 			);
 			echo "<div>" . ($functions || $grouping ? "<select name='columns[$i][fun]'>"
-				. optionlist(array(-1 => "") + array_filter(array(lang('Functions') => $functions, lang('Aggregation') => $grouping)), $val["fun"]) . "</select>"
+				. optionlist(array(-1 => "") + array_filter(array(lang('Functions') => $functions, lang('Aggregation') => $grouping)), @$val["fun"]) . "</select>"
 				. on_help("getTarget(event).value && getTarget(event).value.replace(/ |\$/, '(') + ')'", 1)
 				. script("qsl('select').onchange = function () { helpClose();" . ($key !== "" ? "" : " qsl('select, input', this.parentNode).onchange();") . " };", "")
 				. "($column)" : $column) . "</div>\n";
@@ -596,7 +596,7 @@ class Adminer {
 	* @return string expression to use in LIMIT, will be escaped
 	*/
 	function selectLimitProcess() {
-		return (isset($_GET["limit"]) ? $_GET["limit"] : "50");
+		return (isset($_GET["limit"]) ? $_GET["limit"] : "200");
 	}
 
 	/** Process length box in select

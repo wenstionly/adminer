@@ -9,7 +9,7 @@
 
 include "./include/bootstrap.inc.php";
 include "./include/tmpfile.inc.php";
-
+set_session('dbs', null);
 $enum_length = "'(?:''|[^'\\\\]|\\\\.)*'";
 $inout = "IN|OUT|INOUT";
 
