@@ -151,7 +151,7 @@ function set_adminer_settings($settings) {
 */
 function textarea($name, $value, $rows = 10, $cols = 80) {
 	global $jush;
-	echo "<textarea name='$name' rows='$rows' cols='$cols' class='sqlarea jush-$jush' spellcheck='false' wrap='off'>";
+	echo "<textarea name='" . h($name) . "' rows='$rows' cols='$cols' class='sqlarea jush-$jush' spellcheck='false' wrap='off'>";
 	if (is_array($value)) {
 		foreach ($value as $val) { // not implode() to save memory
 			echo h($val[0]) . "\n\n\n"; // $val == array($query, $time, $elapsed)
@@ -542,7 +542,7 @@ function doc_link($paths, $text = "<sup>?</sup>") {
 		$urls['sql'] = "https://mariadb.com/kb/en/library/";
 		$paths['sql'] = (isset($paths['mariadb']) ? $paths['mariadb'] : str_replace(".html", "/", $paths['sql']));
 	}
-	return ($paths[$jush] ? "<a href='$urls[$jush]$paths[$jush]'" . target_blank() . ">$text</a>" : "");
+	return ($paths[$jush] ? "<a href='" . h($urls[$jush] . $paths[$jush]) . "'" . target_blank() . ">$text</a>" : "");
 }
 
 /** Wrap gzencode() for usage in ob_start()
